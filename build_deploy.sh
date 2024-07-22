@@ -2,7 +2,7 @@
 
 set -exv
 
-IMAGE="quay.io/cloudservices/xjoin-kafka-connect-strimzi"
+IMAGE="quay.io/cloudservices/insights-kafka-connect"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 SECURITY_COMPLIANCE_TAG="sc-$(date +%Y%m%d)-$(git rev-parse --short=7 HEAD)"
 
