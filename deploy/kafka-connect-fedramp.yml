@@ -1,0 +1,444 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: kafka-connect
+parameters:
+- name: KAFKA_CONNECT_IMAGE
+  value: quay.io/cloudservices/xjoin-kafka-connect-strimzi
+- name: IMAGE_TAG
+  value: latest
+- name: KAFKA_BOOTSTRAP_HOST
+  value: platform-mq-kafka-bootstrap.platform-mq-stage.svc.cluster.local
+- name: KAFKA_BOOTSTRAP_PORT
+  value: '9093'
+- name: NUM_REPLICAS
+  value: '1'
+- name: VERSION
+  value: '2.6.2'
+- name: CPU_REQUESTS
+  value: 500m
+- name: CPU_LIMITS
+  value: '1'
+- name: MEMORY_REQUESTS
+  value: 2Gi
+- name: MEMORY_LIMITS
+  value: 4Gi
+- name: XMX
+  value: 4G
+- name: XMS
+  value: 4G
+- name: GROUP_ID
+  value: xjoin-connect-cluster-strimzi
+- name: STORAGE_TOPIC_PREFIX
+  value: xjoin
+- name: NAME_PREFIX
+  value: xjoin-kafka-connect-strimzi
+- name: HBI_DB_SECRET_NAME
+  value: host-inventory-db
+- name: ELASTICSEARCH_SECRET_NAME
+  value: xjoin-elasticsearch
+- name: KAFKA_USER
+  value: kafka-user-all
+
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${NAME_PREFIX}-metrics
+  data:
+    metrics: |-
+      metrics:
+        # Inspired by kafka-connect rules
+        # https://github.com/prometheus/jmx_exporter/blob/master/example_configs/kafka-connect.yml
+        lowercaseOutputName: true
+        lowercaseOutputLabelNames: true
+        rules:
+          #kafka.connect:type=app-info,client-id="{clientid}"
+          #kafka.consumer:type=app-info,client-id="{clientid}"
+          #kafka.producer:type=app-info,client-id="{clientid}"
+          - pattern: 'kafka.(.+)<type=app-info, client-id=(.+)><>start-time-ms'
+            name: kafka_$1_start_time_seconds
+            labels:
+              clientId: "$2"
+            help: "Kafka $1 JMX metric start time seconds"
+            type: GAUGE
+            valueFactor: 0.001
+          - pattern: 'kafka.(.+)<type=app-info, client-id=(.+)><>(commit-id|version): (.+)'
+            name: kafka_$1_$3_info
+            value: 1
+            labels:
+              clientId: "$2"
+              $3: "$4"
+            help: "Kafka $1 JMX metric info version and commit-id"
+            type: GAUGE
+
+          #kafka.producer:type=producer-topic-metrics,client-id="{clientid}",topic="{topic}"", partition="{partition}"
+          #kafka.consumer:type=consumer-fetch-manager-metrics,client-id="{clientid}",topic="{topic}"", partition="{partition}"
+          - pattern: kafka.(.+)<type=(.+)-metrics, client-id=(.+), topic=(.+), partition=(.+)><>(.+-total|compression-rate|.+-avg|.+-replica|.+-lag|.+-lead)
+            name: kafka_$2_$6
+            labels:
+              clientId: "$3"
+              topic: "$4"
+              partition: "$5"
+            help: "Kafka $1 JMX metric type $2"
+            type: GAUGE
+
+          #kafka.producer:type=producer-topic-metrics,client-id="{clientid}",topic="{topic}"
+          #kafka.consumer:type=consumer-fetch-manager-metrics,client-id="{clientid}",topic="{topic}"", partition="{partition}"
+          - pattern: kafka.(.+)<type=(.+)-metrics, client-id=(.+), topic=(.+)><>(.+-total|compression-rate|.+-avg)
+            name: kafka_$2_$5
+            labels:
+              clientId: "$3"
+              topic: "$4"
+            help: "Kafka $1 JMX metric type $2"
+            type: GAUGE
+
+          #kafka.connect:type=connect-node-metrics,client-id="{clientid}",node-id="{nodeid}"
+          #kafka.consumer:type=consumer-node-metrics,client-id=consumer-1,node-id="{nodeid}"
+          - pattern: kafka.(.+)<type=(.+)-metrics, client-id=(.+), node-id=(.+)><>(.+-total|.+-avg)
+            name: kafka_$2_$5
+            labels:
+              clientId: "$3"
+              nodeId: "$4"
+            help: "Kafka $1 JMX metric type $2"
+            type: UNTYPED
+
+          #kafka.connect:type=kafka-metrics-count,client-id="{clientid}"
+          #kafka.consumer:type=consumer-fetch-manager-metrics,client-id="{clientid}"
+          #kafka.consumer:type=consumer-coordinator-metrics,client-id="{clientid}"
+          #kafka.consumer:type=consumer-metrics,client-id="{clientid}"
+          - pattern: kafka.(.+)<type=(.+)-metrics, client-id=(.*)><>(.+-total|.+-avg|.+-bytes|.+-count|.+-ratio|.+-age|.+-flight|.+-threads|.+-connectors|.+-tasks|.+-ago)
+            name: kafka_$2_$4
+            labels:
+              clientId: "$3"
+            help: "Kafka $1 JMX metric type $2"
+            type: GAUGE
+
+          #kafka.connect:type=connector-task-metrics,connector="{connector}",task="{task}<> status"
+          - pattern: 'kafka.connect<type=connector-task-metrics, connector=(.+), task=(.+)><>status: ([a-z-]+)'
+            name: kafka_connect_connector_status
+            value: 1
+            labels:
+              connector: "$1"
+              task: "$2"
+              status: "$3"
+            help: "Kafka Connect JMX Connector status"
+            type: GAUGE
+
+          #kafka.connect:type=task-error-metrics,connector="{connector}",task="{task}"
+          #kafka.connect:type=source-task-metrics,connector="{connector}",task="{task}"
+          #kafka.connect:type=sink-task-metrics,connector="{connector}",task="{task}"
+          #kafka.connect:type=connector-task-metrics,connector="{connector}",task="{task}"
+          - pattern: kafka.connect<type=(.+)-metrics, connector=(.+), task=(.+)><>(.+-total|.+-count|.+-ms|.+-ratio|.+-avg|.+-failures|.+-requests|.+-timestamp|.+-logged|.+-errors|.+-retries|.+-skipped)
+            name: kafka_connect_$1_$4
+            labels:
+              connector: "$2"
+              task: "$3"
+            help: "Kafka Connect JMX metric type $1"
+            type: GAUGE
+
+          #kafka.connect:type=connector-metrics,connector="{connector}"
+          #kafka.connect:type=connect-worker-metrics,connector="{connector}"
+          - pattern: kafka.connect<type=connect-worker-metrics, connector=(.+)><>([a-z-]+)
+            name: kafka_connect_worker_$2
+            labels:
+              connector: "$1"
+            help: "Kafka Connect JMX metric $1"
+            type: GAUGE
+
+          #kafka.connect:type=connect-worker-metrics
+          - pattern: kafka.connect<type=connect-worker-metrics><>([a-z-]+)
+            name: kafka_connect_worker_$1
+            help: "Kafka Connect JMX metric worker"
+            type: GAUGE
+
+          #kafka.connect:type=connect-worker-rebalance-metrics
+          - pattern: kafka.connect<type=connect-worker-rebalance-metrics><>([a-z-]+)
+            name: kafka_connect_worker_rebalance_$1
+            help: "Kafka Connect JMX metric rebalance information"
+            type: GAUGE
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: xjoin-connector-configuration-role
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - get
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: connector-configuration-role-binding
+  subjects:
+  - kind: ServiceAccount
+    name: xjoin-kafka-connect-strimzi-connect
+    namespace: xjoin-stage
+  roleRef:
+    kind: Role
+    name: xjoin-connector-configuration-role
+    apiGroup: rbac.authorization.k8s.io
+
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaConnect
+  metadata:
+    name: ${NAME_PREFIX}
+    labels:
+      app: ${NAME_PREFIX}
+    annotations:
+      strimzi.io/use-connector-resources: "true"
+  spec:
+    logging:
+      type: inline
+      loggers:
+        connect.root.logger.level: "WARN"
+    image: ${KAFKA_CONNECT_IMAGE}:${IMAGE_TAG}
+    version: ${VERSION}
+    replicas: ${{NUM_REPLICAS}}
+    resources:
+      limits:
+        cpu: ${CPU_LIMITS}
+        memory: ${MEMORY_LIMITS}
+      requests:
+        cpu: ${CPU_REQUESTS}
+        memory: ${MEMORY_REQUESTS}
+    jvmOptions:
+      "-Xmx": ${XMX}
+      "-Xms": ${XMS}
+
+    bootstrapServers: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
+    authentication:
+      type: scram-sha-512
+      username: ${KAFKA_USER}
+      passwordSecret:
+        secretName: kafka-connection
+        password: password
+    tls:
+      trustedCertificates:
+        - secretName: kafka-connection
+          certificate: cacert
+    config:
+      group.id: ${GROUP_ID}
+      offset.storage.topic: ${STORAGE_TOPIC_PREFIX}-connect-config
+      config.storage.topic: ${STORAGE_TOPIC_PREFIX}-connect-offsets
+      status.storage.topic: ${STORAGE_TOPIC_PREFIX}-connect-status
+      connector.client.config.override.policy: All
+      config.providers: env
+      config.providers.env.class: com.redhat.insights.kafka.config.providers.EnvironmentConfigProvider
+    externalConfiguration:
+      env:
+      # advisor
+      - name: ADVISOR_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: advisor-db
+      - name: ADVISOR_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: advisor-db
+      - name: ADVISOR_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: advisor-db
+      - name: ADVISOR_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: advisor-db
+      - name: ADVISOR_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: advisor-db
+
+      #patch
+      - name: PATCH_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: patch-db
+      - name: PATCH_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: patch-db
+      - name: PATCH_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: patch-db
+      - name: PATCH_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: patch-db
+      - name: PATCH_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: patch-db
+
+      # vulnerability
+      - name: VULNERABILITY_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: vulnerability-db
+      - name: VULNERABILITY_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: vulnerability-db
+      - name: VULNERABILITY_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: vulnerability-db
+      - name: VULNERABILITY_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: vulnerability-db
+      - name: VULNERABILITY_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: vulnerability-db
+
+      # malware-detection
+      - name: MALWARE_DETECTION_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: malware-detection-db
+      - name: MALWARE_DETECTION_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: malware-detection-db
+      - name: MALWARE_DETECTION_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: malware-detection-db
+      - name: MALWARE_DETECTION_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: malware-detection-db
+      - name: MALWARE_DETECTION_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: malware-detection-db
+
+      # syndication-test
+      - name: SYNDICATION_TEST_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: syndication-test-db
+      - name: SYNDICATION_TEST_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: syndication-test-db
+      - name: SYNDICATION_TEST_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: syndication-test-db
+      - name: SYNDICATION_TEST_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: syndication-test-db
+      - name: SYNDICATION_TEST_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: syndication-test-db
+
+      # compliance
+      - name: COMPLIANCE_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: compliance-db
+      - name: COMPLIANCE_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: compliance-db
+      - name: COMPLIANCE_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: compliance-db
+      - name: COMPLIANCE_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: compliance-db
+      - name: COMPLIANCE_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: compliance-db
+
+      # HBI
+      - name: HOST_INVENTORY_DB_NAME
+        valueFrom:
+          secretKeyRef:
+            key: db.name
+            name: ${HBI_DB_SECRET_NAME}
+      - name: HOST_INVENTORY_DB_HOSTNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.host
+            name: ${HBI_DB_SECRET_NAME}
+      - name: HOST_INVENTORY_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            key: db.user
+            name: ${HBI_DB_SECRET_NAME}
+      - name: HOST_INVENTORY_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: db.password
+            name: ${HBI_DB_SECRET_NAME}
+      - name: HOST_INVENTORY_DB_PORT
+        valueFrom:
+          secretKeyRef:
+            key: db.port
+            name: ${HBI_DB_SECRET_NAME}
+      - name: ELASTICSEARCH_ENDPOINT
+        valueFrom:
+          secretKeyRef:
+            key: endpoint
+            name: ${ELASTICSEARCH_SECRET_NAME}
+
+      volumes:
+        - name: rds-client-ca
+          secret:
+            secretName: rds-client-ca
+    template:
+      pod:
+        imagePullSecrets:
+          - name: quay-cloudservices-pull
+          - name: rh-registry-pull
+
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: metrics
+          name: ${NAME_PREFIX}-metrics
+          optional: false
