@@ -14,6 +14,10 @@ RUN rm -rf /opt/kafka-exporter
 RUN mkdir -p ${CONNECT_PLUGIN_PATH}
 
 # Project Cyndi dependencies
+
+# Taken from https://github.com/debezium/docker-images/blob/master/connect-base/1.3/docker-maven-download.sh
+COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
+
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a 
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
