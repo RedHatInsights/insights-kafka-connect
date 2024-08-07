@@ -22,6 +22,9 @@ RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/po
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
 
+RUN curl -fSL -o $CONNECT_PLUGIN_PATH/connect-transforms-0.1.3-rc1.jar \
+    https://github.com/SteveHNH/connect-transforms/raw/release_0.1.3/connect-transforms-0.1.3-rc1.jar
+
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download confluent kafka-connect-jdbc 10.7.0 dfb2d21945e5e304e8f2115f402c3b1e && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central com/redhat/insights/kafka config-providers 0.1.3 6ebad5b2aa0b5d4b8fba153c78b6b8ec
 
