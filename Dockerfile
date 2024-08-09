@@ -1,13 +1,10 @@
 #This Dockfile is to support the Security-Compliance build of the Xjoin Strimzi Kafka Connect image.
 
-FROM registry.redhat.io/amq-streams/kafka-36-rhel8:2.6.0-6
+FROM registry.redhat.io/amq-streams/kafka-37-rhel9:2.7.0-6
 USER root:root
 
 ENV CONNECT_PLUGIN_PATH=/opt/kafka/plugins \
     CONNECT_LIB_PATH=/opt/kafka/libs
-
-RUN microdnf update -y && \
-    microdnf clean all
 
 RUN rm -rf /opt/kafka-exporter
 
