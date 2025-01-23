@@ -16,7 +16,7 @@ RUN mkdir -p ${CONNECT_PLUGIN_PATH}
 # Taken from https://github.com/debezium/docker-images/blob/master/connect-base/1.3/docker-maven-download.sh
 COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
 
-RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a 
+RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
 
@@ -31,6 +31,8 @@ RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/op
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-commons 9.5 7d1fce986192f71722b19754e4cb9e61 && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-tree 9.5 44755681b7d6fa7143afbb438e55c20c && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-util 9.5 ad0016249fb68bb9196babefd47b80dc && \
-    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-analysis 9.5 4df0adafc78ebba404d4037987d36b61
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-analysis 9.5 4df0adafc78ebba404d4037987d36b61 && \
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/project-kessel kafka-relations-sink 0.4 a4088bb1c7298ac0144056c14fd522ce
+
 
 USER 1001
