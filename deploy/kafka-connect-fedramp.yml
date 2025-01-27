@@ -227,8 +227,9 @@ objects:
       config.storage.topic: ${STORAGE_TOPIC_PREFIX}-connect-offsets
       status.storage.topic: ${STORAGE_TOPIC_PREFIX}-connect-status
       connector.client.config.override.policy: All
-      config.providers: env
+      config.providers: env,secrets
       config.providers.env.class: com.redhat.insights.kafka.config.providers.EnvironmentConfigProvider
+      config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
     externalConfiguration:
       env:
       # advisor
