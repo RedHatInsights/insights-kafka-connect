@@ -1,7 +1,8 @@
 #This Dockfile is to support the Security-Compliance build of the Xjoin Strimzi Kafka Connect image.
 
 # https://catalog.redhat.com/software/containers/amq-streams/kafka-39-rhel9/67502113e0d4ab9de796ab8d
-FROM registry.access.redhat.com/amq-streams/kafka-39-rhel9:2.9.0-2
+
+FROM registry.access.redhat.com/amq-streams/kafka-39-rhel9:2.9.0-4
 USER root:root
 
 ENV CONNECT_PLUGIN_PATH=/opt/kafka/plugins \
