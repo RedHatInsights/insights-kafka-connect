@@ -5,7 +5,8 @@ FROM registry.redhat.io/amq-streams/kafka-39-rhel9:2.9.0-4
 USER root:root
 
 ENV CONNECT_PLUGIN_PATH=/opt/kafka/plugins \
-    CONNECT_LIB_PATH=/opt/kafka/libs
+    CONNECT_LIB_PATH=/opt/kafka/libs \
+    DEBEZIUM_VERSION=2.7.3.Final
 
 RUN rm -rf /opt/kafka-exporter
 
@@ -32,7 +33,8 @@ RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/op
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-tree 9.5 44755681b7d6fa7143afbb438e55c20c && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-util 9.5 ad0016249fb68bb9196babefd47b80dc && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-analysis 9.5 4df0adafc78ebba404d4037987d36b61 && \
-    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/project-kessel kafka-relations-sink 0.4 a4088bb1c7298ac0144056c14fd522ce
-
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/project-kessel kafka-relations-sink 0.4 a4088bb1c7298ac0144056c14fd522ce && \
+    MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium postgres "$DEBEZIUM_VERSION" 9bb46566fa18541be206f0bd0f77c4de && \
+    MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium-optional scripting "$DEBEZIUM_VERSION" e8c6825ada56c4f028b67fe634f7d4d6
 
 USER 1001
