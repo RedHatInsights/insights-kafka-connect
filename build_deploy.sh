@@ -3,6 +3,7 @@
 set -exv
 
 IMAGE="quay.io/cloudservices/insights-kafka-connect"
+STRIMZI_IMAGE="quay.io/cloudservices/xjoin-kafka-connect-strimzi"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 SECURITY_COMPLIANCE_TAG="sc-$(date +%Y%m%d)-$(git rev-parse --short=7 HEAD)"
 
@@ -38,6 +39,12 @@ if [[ "$GIT_BRANCH" != "origin/security-compliance" ]]; then
     docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"
     docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
     docker --config="$DOCKER_CONF" push "${IMAGE}:latest"
+    # Xjoin Kafka Connect Strimzi image
+    # TODO(gchamoul): remove this once xjoin-kafka-connect will be fully deprecated
+    docker --config="$DOCKER_CONF" build -t "${STRIMZI_IMAGE}:${IMAGE_TAG}" -f "$PWD/$DOCKER_FILE" "$PWD"
+    docker --config="$DOCKER_CONF" push "${STRIMZI_IMAGE}:${IMAGE_TAG}"
+    docker --config="$DOCKER_CONF" tag "${STRIMZI_IMAGE}:${IMAGE_TAG}" "${STRIMZI_IMAGE}:latest"
+    docker --config="$DOCKER_CONF" push "${STRIMZI_IMAGE}:latest"
 else
     DOCKER_FILE="Dockerfile-security-compliance"
     docker --config="$DOCKER_CONF" build -t "${IMAGE}:${SECURITY_COMPLIANCE_TAG}" -f "$PWD/$DOCKER_FILE" "$PWD"
