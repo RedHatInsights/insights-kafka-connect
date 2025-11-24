@@ -1,0 +1,19 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "baseBranches": ["main"],
+    "packageRules": [
+        {
+            "description": "Update Dockerfile base image",
+            "matchMangers": ["dockerfile"],
+            "matchUpdateTypes": ["minor", "patch"],
+            "matchPackageNames": ["registry.redhat.io/amq-streams/kafka-39-rhel9"],
+            "versioning": "redhat",
+            "automerge": true
+        },
+        {
+            "description": "Automerge Tekton manager updates",
+            "matchMangers": ["tekton"],
+            "automerge": true
+        }
+    ]
+}
