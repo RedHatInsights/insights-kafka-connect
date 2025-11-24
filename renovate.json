@@ -4,15 +4,14 @@
     "packageRules": [
         {
             "description": "Update Dockerfile base image",
-            "matchMangers": ["dockerfile"],
-            "matchUpdateTypes": ["minor", "patch"],
+            "matchManagers": ["dockerfile"],
             "matchPackageNames": ["registry.redhat.io/amq-streams/kafka-39-rhel9"],
             "versioning": "redhat",
             "automerge": true
         },
         {
             "description": "Automerge Tekton manager updates",
-            "matchMangers": ["tekton"],
+            "matchManagers": ["tekton"],
             "automerge": true
         }
     ]
