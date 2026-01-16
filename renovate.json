@@ -10,7 +10,7 @@
                 "dockerfile"
             ],
             "matchPackageNames": [
-                "registry.redhat.io/amq-streams/kafka-39-rhel9"
+                "registry.redhat.io/amq-streams/kafka-41-rhel9"
             ],
             "versioning": "redhat",
             "automerge": true
