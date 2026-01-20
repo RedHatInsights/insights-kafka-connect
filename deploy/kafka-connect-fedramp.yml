@@ -230,6 +230,8 @@ objects:
       config.providers: env,secrets
       config.providers.env.class: com.redhat.insights.kafka.config.providers.EnvironmentConfigProvider
       config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
+      ssl.truststore.type: PEM
+      ssl.truststore.certificates: /opt/kafka/connect-certs/kafka-connection/cacert
     externalConfiguration:
       env:
       # advisor
