@@ -18,7 +18,8 @@ RUN mkdir -p ${CONNECT_PLUGIN_PATH}
 COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
 
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a && \
-    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-core 2.25.3 b77ecc775eee03b8152542cd1ea63ec1
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-core 2.25.3 b77ecc775eee03b8152542cd1ea63ec1 && \
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-slf4j2-impl 2.24.3 0ec2df0e6ab3e63e2d7b043bd0478c3f
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
 
