@@ -19,9 +19,6 @@ COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
 
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/slf4j slf4j-reload4j 2.0.17 c6a2d9b606d7d333350b6b95488e1138
-#    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-1.2-api 2.24.3  b2486768ef6049ed7c015622702bf99c && \
-#    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-core 2.25.3 b77ecc775eee03b8152542cd1ea63ec1 && \
-#    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-slf4j2-impl 2.24.3 0ec2df0e6ab3e63e2d7b043bd0478c3f && \
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
 
@@ -31,7 +28,7 @@ RUN curl -fSL -o $CONNECT_PLUGIN_PATH/connect-transforms-0.1.3-rc1.jar \
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download confluent kafka-connect-jdbc 10.7.0 dfb2d21945e5e304e8f2115f402c3b1e && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central com/redhat/insights/kafka config-providers 0.1.3 6ebad5b2aa0b5d4b8fba153c78b6b8ec
 
-RUN MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download central io/debezium debezium-core "$DEBEZIUM_VERSION" e404abd9a74374eca8a9240ec6e690ed
+RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central io/debezium debezium-core "$DEBEZIUM_VERSION" e404abd9a74374eca8a9240ec6e690ed
 
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/openjdk/nashorn nashorn-core 15.4 a9b3360e6a486cf62c1952c7816b7d97 && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm 9.5 29721ee4b5eacf0a34b204c345c8bc69 && \
