@@ -18,7 +18,7 @@ RUN mkdir -p ${CONNECT_PLUGIN_PATH}
 COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
 
 RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a && \
-    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/slf4j-api 2.0.17 b6480d114a23683498ac3f746f959d2f
+    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/slf4j/slf4j-api 2.0.17 b6480d114a23683498ac3f746f959d2f
 #    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-1.2-api 2.24.3  b2486768ef6049ed7c015622702bf99c && \
 #    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-core 2.25.3 b77ecc775eee03b8152542cd1ea63ec1 && \
 #    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/apache/logging/log4j log4j-slf4j2-impl 2.24.3 0ec2df0e6ab3e63e2d7b043bd0478c3f && \
