@@ -1,7 +1,7 @@
 #This Dockfile is to support the Security-Compliance build of the Xjoin Strimzi Kafka Connect image.
 
-# https://catalog.redhat.com/en/software/containers/amq-streams/kafka-39-rhel9/67502113e0d4ab9de796ab8d
-FROM registry.redhat.io/amq-streams/kafka-39-rhel9:2.9.3-23
+# https://catalog.redhat.com/software/containers/amq-streams/kafka-39-rhel9/67502113e0d4ab9de796ab8d
+FROM registry.redhat.io/amq-streams/kafka-39-rhel9:3.0.1-10
 USER root:root
 
 ENV CONNECT_PLUGIN_PATH=/opt/kafka/plugins \
@@ -36,8 +36,6 @@ RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/op
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/ow2/asm asm-analysis 9.5 4df0adafc78ebba404d4037987d36b61 && \
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/project-kessel kafka-relations-sink 0.5 9a9ceeaa6734969f54b049d02dfd1812 && \
     MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium postgres "$DEBEZIUM_VERSION" 9bb46566fa18541be206f0bd0f77c4de && \
-    MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium-optional scripting "$DEBEZIUM_VERSION" e8c6825ada56c4f028b67fe634f7d4d6 && \
-    mv $CONNECT_PLUGIN_PATH/debezium-scripting/debezium-scripting-$DEBEZIUM_VERSION.jar $CONNECT_PLUGIN_PATH/debezium-connector-postgres && \
-    rm -rf $CONNECT_PLUGIN_PATH/debezium-scripting
+    MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium-optional scripting "$DEBEZIUM_VERSION" e8c6825ada56c4f028b67fe634f7d4d6
 
 USER 1001
