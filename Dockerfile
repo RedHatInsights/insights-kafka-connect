@@ -17,8 +17,7 @@ RUN mkdir -p ${CONNECT_PLUGIN_PATH}
 # Taken from https://github.com/debezium/docker-images/blob/master/connect-base/1.3/docker-maven-download.sh
 COPY docker-maven-download.sh /usr/local/bin/docker-maven-download
 
-RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a && \
-    MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/slf4j slf4j-reload4j 2.0.17 c6a2d9b606d7d333350b6b95488e1138
+RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/postgresql postgresql 42.3.9 69adbbdff317538a33fb72c390b61a7a
 
 COPY cyndi-dialect-postgresql.jar $CONNECT_LIB_PATH
 
@@ -37,5 +36,7 @@ RUN MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/op
     MAVEN_DEP_DESTINATION=$CONNECT_LIB_PATH docker-maven-download central org/project-kessel kafka-relations-sink 0.5 9a9ceeaa6734969f54b049d02dfd1812 && \
     MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium postgres "$DEBEZIUM_VERSION" 9bb46566fa18541be206f0bd0f77c4de && \
     MAVEN_DEP_DESTINATION=$CONNECT_PLUGIN_PATH docker-maven-download debezium-optional scripting "$DEBEZIUM_VERSION" e8c6825ada56c4f028b67fe634f7d4d6
+
+RUN mkdir /opt/kafka/custom-config && cp /opt/kafka/config/log4j.properties /opt/kafka/custom-config/log4j.properties
 
 USER 1001
