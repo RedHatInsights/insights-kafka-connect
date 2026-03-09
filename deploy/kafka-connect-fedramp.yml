@@ -7,10 +7,8 @@ parameters:
   value: quay.io/cloudservices/xjoin-kafka-connect-strimzi
 - name: IMAGE_TAG
   value: latest
-- name: KAFKA_BOOTSTRAP_HOST
-  value: platform-mq-kafka-bootstrap.platform-mq-stage.svc.cluster.local
-- name: KAFKA_BOOTSTRAP_PORT
-  value: '9093'
+- name: KAFKA_HOSTS
+  value: platform-mq-kafka-bootstrap.platform-mq-stage.svc.cluster.local:9093
 - name: NUM_REPLICAS
   value: '1'
 - name: VERSION
@@ -210,7 +208,7 @@ objects:
       "-Xmx": ${XMX}
       "-Xms": ${XMS}
 
-    bootstrapServers: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
+    bootstrapServers: ${KAFKA_HOSTS}
     authentication:
       type: scram-sha-512
       username: ${KAFKA_USER}
